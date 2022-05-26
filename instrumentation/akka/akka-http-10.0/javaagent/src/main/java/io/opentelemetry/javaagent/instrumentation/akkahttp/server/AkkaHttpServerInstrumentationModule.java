@@ -131,6 +131,7 @@ public class AkkaHttpServerInstrumentationModule extends InstrumentationModule {
       return new FlowSpanLogic(shape());
     }
 
+    //An instance of this class will be created per connection. Only one request will be processed at a time.
     private static class FlowSpanLogic extends GraphStageLogic {
       private Context ctx = null;
       private Scope scope = null;
@@ -140,29 +141,21 @@ public class AkkaHttpServerInstrumentationModule extends InstrumentationModule {
         super(shape);
 
         setHandler(
-            shape.in1(),
-            new AbstractInHandler() {
-              @Override
-              public void onPush() {
-                HttpResponse response = grab(shape.in1());
-                finishSpan(response, null);
-                push(shape.out1(), response);
-              }
-
-              @Override
-              public void onUpstreamFailure(Throwable ex) throws Exception {
-                finishSpan(null, ex);
-                super.onUpstreamFailure(ex);
-              }
-            }
-        );
-
-        setHandler(
             shape.out1(),
             new AbstractOutHandler() {
               @Override
               public void onPull() {
                 pull(shape.in1());
+              }
+            }
+        );
+
+        setHandler(
+            shape.out2(),
+            new AbstractOutHandler() {
+              @Override
+              public void onPull() {
+                pull(shape.in2());
               }
             }
         );
@@ -186,11 +179,19 @@ public class AkkaHttpServerInstrumentationModule extends InstrumentationModule {
         );
 
         setHandler(
-            shape.out2(),
-            new AbstractOutHandler() {
+            shape.in1(),
+            new AbstractInHandler() {
               @Override
-              public void onPull() {
-                pull(shape.in2());
+              public void onPush() {
+                HttpResponse response = grab(shape.in1());
+                finishSpan(response, null);
+                push(shape.out1(), response);
+              }
+
+              @Override
+              public void onUpstreamFailure(Throwable ex) throws Exception {
+                finishSpan(null, ex);
+                super.onUpstreamFailure(ex);
               }
             }
         );
@@ -199,8 +200,7 @@ public class AkkaHttpServerInstrumentationModule extends InstrumentationModule {
       private void createSpan(HttpRequest request) {
         Context parentContext = currentContext();
 
-        boolean shouldStart = instrumenter().shouldStart(parentContext, request);
-        if (shouldStart) {
+        if (instrumenter().shouldStart(parentContext, request)) {
           scope = parentContext != null ? parentContext.makeCurrent() : null;
           ctx = instrumenter().start(parentContext, request);
 
