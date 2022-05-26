@@ -10,6 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import akka.http.scaladsl.model.HttpRequest;
 import akka.http.scaladsl.model.HttpResponse;
+import akka.stream.ActorAttributes;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -36,7 +37,7 @@ public class AkkaHttpServerSourceInstrumentation implements TypeInstrumentation 
     public static void wrapHandler(
         @Advice.Argument(value = 0, readOnly = false)
         akka.stream.scaladsl.Flow<HttpRequest, HttpResponse, ?> handler) {
-        handler = handler.join(new AkkaHttpServerInstrumentationModule.FlowWrapper());
+        handler = handler.join(new AkkaHttpServerInstrumentationModule.FlowWrapper()).withAttributes(ActorAttributes.dispatcher(AkkaHttpServerSingletons.OTEL_DISPATCHER_NAME));
     }
   }
 }
