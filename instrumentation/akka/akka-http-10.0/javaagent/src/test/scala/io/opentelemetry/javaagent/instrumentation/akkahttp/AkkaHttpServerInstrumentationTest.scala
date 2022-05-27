@@ -1,23 +1,20 @@
 package io.opentelemetry.javaagent.instrumentation.akkahttp
 
-import io.opentelemetry.instrumentation.testing.junit.http.{
-  HttpServerInstrumentationExtension,
-  HttpServerTestOptions
-}
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension
+import io.opentelemetry.instrumentation.testing.junit.http.{HttpServerInstrumentationExtension, HttpServerTestOptions}
 import org.junit.jupiter.api.extension.RegisterExtension
 
-class AkkaHttpServerInstrumentationTestSource extends AbstractHttpServerInstrumentationTest {
+class AkkaHttpServerInstrumentationTest extends AbstractHttpServerInstrumentationTest {
   @RegisterExtension val extension: InstrumentationExtension =
     HttpServerInstrumentationExtension.forAgent()
 
   override protected def setupServer(): AnyRef = {
-    AkkaHttpTestSourceWebServer.start(port)
+    AkkaHttpTestWebServer.start(port)
     null
   }
 
   override protected def stopServer(server: Object): Unit =
-    AkkaHttpTestSourceWebServer.stop()
+    AkkaHttpTestWebServer.stop()
 
   override protected def configure(
                                     options: HttpServerTestOptions
