@@ -31,12 +31,6 @@ public class HttpExtServerInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("bindAndHandle").and(takesArgument(0, named("akka.stream.scaladsl.Flow"))),
         this.getClass().getName() + "$AkkaHttpFlowAdvice");
-    transformer.applyAdviceToMethod(
-        named("bindAndHandleSync").and(takesArgument(0, named("scala.Function1"))),
-        this.getClass().getName() + "$AkkaHttpSyncAdvice");
-    transformer.applyAdviceToMethod(
-        named("bindAndHandleAsync").and(takesArgument(0, named("scala.Function1"))),
-        this.getClass().getName() + "$AkkaHttpAsyncAdvice");
   }
 
   @SuppressWarnings("unused")
